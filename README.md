@@ -1,24 +1,24 @@
 # AI News Station: Multi-Agent Orchestration
 
-A production-grade **Multi-Agent System (MAS)** built with **LangGraph** and **FastAPI**. This system automates the lifecycle of digital content creation—from live web research to editorial synthesis and quality assurance—incorporating human oversight and real-time cost tracking[cite: 1].
+A production-grade **Multi-Agent System (MAS)** built with **LangGraph** and **FastAPI**. This system automates the lifecycle of digital content creation—from live web research to editorial synthesis and quality assurance—incorporating human oversight and real-time cost tracking
 
 ## 🚀 Key Features
 
-*   **Stateful Multi-Agent Orchestration:** Utilizes a Directed Acyclic Graph (DAG) with cycles to allow agents to collaborate and self-correct[cite: 1].
-*   **Human-in-the-Loop (HITL):** Implements state-level interrupts, allowing human operators to review and approve drafts before finalization[cite: 1].
-*   **Persistent Checkpointing:** Uses session-based persistence (`thread_id`) to ensure the system can recover state across server restarts or long pauses[cite: 1].
-*   **Real-time Observability:** Built-in token tracking (input/output) for every agent interaction to monitor operational costs[cite: 1].
-*   **Agentic Search:** Integrated with **Tavily AI** for optimized, LLM-friendly web retrieval[cite: 1].
+*   **Stateful Multi-Agent Orchestration:** Utilizes a Directed Acyclic Graph (DAG) with cycles to allow agents to collaborate and self-correct.
+*   **Human-in-the-Loop (HITL):** Implements state-level interrupts, allowing human operators to review and approve drafts before finalization.
+*   **Persistent Checkpointing:** Uses session-based persistence (`thread_id`) to ensure the system can recover state across server restarts or long pauses.
+*   **Real-time Observability:** Built-in token tracking (input/output) for every agent interaction to monitor operational costs.
+*   **Agentic Search:** Integrated with **Tavily AI** for optimized, LLM-friendly web retrieval.
 
 ---
 
 ## 🏗️ Architecture
 
-The system is governed by a shared **AgentState**, which acts as a "shared notebook" for three specialized agents[cite: 1]:
+The system is governed by a shared **AgentState**, which acts as a "shared notebook" for three specialized agents:
 
-1.  **The Researcher:** Executes tool-calls to gather live data from the web based on a user-provided topic[cite: 1].
-2.  **The Editor:** Synthesizes raw research data into a formatted, high-quality LinkedIn post[cite: 1].
-3.  **The Critic:** Acts as a quality gate. It evaluates the editor's output and either triggers a **Self-Correction loop** or marks the task as complete[cite: 1].
+1.  **The Researcher:** Executes tool-calls to gather live data from the web based on a user-provided topic.
+2.  **The Editor:** Synthesizes raw research data into a formatted, high-quality LinkedIn post.
+3.  **The Critic:** Acts as a quality gate. It evaluates the editor's output and either triggers a **Self-Correction loop** or marks the task as complete.
 
 
 
@@ -64,7 +64,7 @@ python main.py
 ## 📡 API Endpoints
 
 ### `POST /start`
-Initializes the graph and runs the **Researcher** and **Editor**. The process will automatically interrupt (pause) after the draft is created for human review[cite: 1].
+Initializes the graph and runs the **Researcher** and **Editor**. The process will automatically interrupt (pause) after the draft is created for human review.
 
 **Request:**
 ```json
@@ -74,7 +74,7 @@ Initializes the graph and runs the **Researcher** and **Editor**. The process wi
 ```
 
 ### `POST /approve/{thread_id}`
-Resumes the graph from the frozen state, running the **Critic** to finalize the post[cite: 1].
+Resumes the graph from the frozen state, running the **Critic** to finalize the post.
 
 
 
