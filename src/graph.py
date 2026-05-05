@@ -1,35 +1,33 @@
 from langgraph.graph import StateGraph, START, END
 from .state import AgentState
-from .agents import researcher, editor, critic
-from langgraph.checkpoint.memory import MemorySaver
-
-checkpoint = MemorySaver()
-
-def route_after_critic(state: AgentState):
-    """Logic to decide: Go back to Editor or Stop?"""
-    last_msg = state["messages"][-1].content
-    if "REVISE" in last_msg.upper():
-        return "editor_agent" # Loop back!
-    return END
+from .agents import supervisor, researcher, editor, summarizer
 
 workflow = StateGraph(AgentState)
 
-workflow.add_node("researcher_agent", researcher)
-workflow.add_node("editor_agent", editor)
-workflow.add_node("critic_agent", critic) # New Node
+# 1. Add Nodes
+_ = workflow.add_node("manager", supervisor)
+_ = workflow.add_node("researcher", researcher)
+_ = workflow.add_node("editor", editor)
+_ = workflow.add_node("summarizer", summarizer)
 
-# Define the Flow
-workflow.add_edge(START, "researcher_agent")
-workflow.add_edge("researcher_agent", "editor_agent")
-workflow.add_edge("editor_agent", "critic_agent")
+# 2. Define the Hub-and-Spoke Flow
+_ = workflow.add_edge(START, "manager")
 
-# The Magic: A Conditional Edge
-workflow.add_conditional_edges(
-    "critic_agent",
-    route_after_critic
-)
+# All workers go back to manager after finishing
+_ = workflow.add_edge("researcher", "manager")
+_ = workflow.add_edge("editor", "manager")
+_ = workflow.add_edge("summarizer", "manager")
 
-app = workflow.compile(
-    checkpointer=checkpoint,
-    interrupt_before=["critic_agent"] # It will pause here!
-)
+# 3. Manager's Decision (Conditional Edge)
+def route(state: AgentState):
+    next_step = str(state.get("next", "")).strip().lower()
+    if next_step == "finish":
+        return END
+    if next_step in {"researcher", "editor", "summarizer"}:
+        return next_step
+    # Default to a safe worker if manager output is missing/invalid.
+    return "researcher"
+
+_ = workflow.add_conditional_edges("manager", route)
+
+app = workflow.compile()

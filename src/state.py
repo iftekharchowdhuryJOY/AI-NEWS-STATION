@@ -1,18 +1,20 @@
-from typing import Annotated, Any, NotRequired, TypedDict
+from typing import Annotated, NotRequired, TypedDict
 
 from langgraph.graph.message import add_messages
 
 
 class AgentState(TypedDict):
-    """Graph state. Avoid keys reserved by LangGraph (e.g. ``checkpoint_id``)."""
+    """Shared graph state for both API and workflow modules."""
 
-    messages: Annotated[list[Any], add_messages]
+    messages: Annotated[list[object], add_messages]
     raw_news: str
-    stats: NotRequired[dict[str, Any]]
-    total_tokens: NotRequired[Any]
-    input_tokens: NotRequired[Any]
-    output_tokens: NotRequired[Any]
-    input_tokens_details: NotRequired[dict[str, Any]]
-    output_tokens_details: NotRequired[dict[str, Any]]
-    input_cost: NotRequired[Any]
-    output_cost: NotRequired[Any]
+    summary: NotRequired[str]
+    next: NotRequired[str]
+    stats: NotRequired[dict[str, object]]
+    total_tokens: NotRequired[int]
+    input_tokens: NotRequired[int]
+    output_tokens: NotRequired[int]
+    input_tokens_details: NotRequired[dict[str, int]]
+    output_tokens_details: NotRequired[dict[str, int]]
+    input_cost: NotRequired[float]
+    output_cost: NotRequired[float]
