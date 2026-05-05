@@ -8,6 +8,8 @@ class AgentState(TypedDict):
 
     messages: Annotated[list[object], add_messages]
     raw_news: str
+    review_decision: NotRequired[str]
+    review_feedback: NotRequired[str]
     summary: NotRequired[str]
     next: NotRequired[str]
     stats: NotRequired[dict[str, object]]

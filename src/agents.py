@@ -11,7 +11,7 @@ _ = load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 model = ChatOpenAI(model="gpt-4o")
 search_tool = TavilySearch(max_results=3)
 SKILLS_PATH = Path(__file__).resolve().parent.parent / "skills.md"
-VALID_NEXT_STEPS = {"researcher", "editor", "summarizer", "finish"}
+VALID_NEXT_STEPS = {"researcher", "editor", "summarizer", "critic", "finish"}
 
 
 # --- PILLAR: ISOLATE (Load Skills) ---
@@ -50,8 +50,8 @@ def supervisor(state: AgentState):
     prompt = (
         f"You are the Manager. Based on these skills:\n{skills}\n"
         f"Current Summary: {state.get('summary', 'None')}\n"
-        "Who should work next? Options: researcher, editor, summarizer, or FINISH.\n"
-        "Return exactly one word: researcher, editor, summarizer, or finish."
+        "Who should work next? Options: researcher, editor, summarizer, critic, finish or FINISH.\n"
+        "Return exactly one word: researcher, editor, summarizer, critic, finish or FINISH."
     )
     response = model.invoke(prompt)
     return {"next": _coerce_next_step(_text_content(response.content))}
@@ -75,6 +75,8 @@ def summarizer(state: AgentState):
 # (Keep your researcher and editor functions here, but ensure they point back to supervisor)
 
 def researcher(state: AgentState):
+    if not state.get("messages"):
+        raise ValueError("Missing input messages in state for researcher node.")
     query = _message_content(state["messages"][-1])
     results = search_tool.invoke({"query": query})
     return {
@@ -85,7 +87,14 @@ def researcher(state: AgentState):
 
 def editor(state: AgentState):
     news_data = state["raw_news"]
-    prompt = f"Take this news: {news_data} and write a 3-bullet point LinkedIn post."
+    review_feedback = str(state.get("review_feedback", "")).strip()
+    if review_feedback:
+        prompt = (
+            f"Take this news: {news_data} and write a 3-bullet point LinkedIn post.\n"
+            f"Human review feedback to apply: {review_feedback}"
+        )
+    else:
+        prompt = f"Take this news: {news_data} and write a 3-bullet point LinkedIn post."
     response = model.invoke(prompt)
     return {
         "messages": [response],
@@ -100,6 +109,21 @@ def editor(state: AgentState):
 
 
 def critic(state: AgentState):
+    decision = str(state.get("review_decision", "")).strip().lower()
+    feedback = str(state.get("review_feedback", "")).strip()
+
+    # Manual review mode: deterministic routing, no LLM critic guessing.
+    if decision == "approve":
+        response = AIMessage(content="FINISH")
+        return {
+            "messages": [response],
+        }
+    if decision == "revise":
+        response = AIMessage(content=f"REVISE: {feedback}" if feedback else "REVISE")
+        return {
+            "messages": [response],
+        }
+
     last_post = _message_content(state["messages"][-1])
     prompt = (
         f"Review this post: {last_post}. Say 'REVISE' if it needs work, otherwise 'FINISH'."
